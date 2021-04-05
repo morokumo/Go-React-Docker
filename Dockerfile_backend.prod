@@ -1,0 +1,8 @@
+FROM golang:latest
+
+WORKDIR /go/src
+ENV GO111MODULE=on
+ENV GOPATH=''
+
+COPY ./backend .
+CMD [ "go", "mod" , "download"]

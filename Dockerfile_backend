@@ -1,0 +1,5 @@
+FROM golang:latest
+
+WORKDIR /go/src
+ENV GO111MODULE=on
+ENV GOPATH=''

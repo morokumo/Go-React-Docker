@@ -1,0 +1,45 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_backend
+    tty: true
+    ports:
+      - '9000:8080'
+    volumes:
+      - ./backend:/go/src
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_frontend
+    ports:
+      - '3000:3000'
+      - '8000:8000'
+    tty: true
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+
+  database:
+    image: postgres:12-alpine
+    ports:
+      - '5432'
+    tty: true
+    environment:
+      POSTGRES_USER : postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB : postgres
+
+  session-store:
+    image: redis:latest
+    ports:
+      - '6379'
+
+#  server:
+#    image: nginx
+#    ports:
+#    - '8080:8080'
+#    volumes:
+#    -
