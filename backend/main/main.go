@@ -5,26 +5,42 @@ import (
 	"backend/adapter/registry"
 	"backend/domain/entity"
 	"backend/infra/dao"
+	"backend/utility"
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+//
+//func setUpRepository(){
+//	repository := registry.NewRepository()
+//	db, _ := dao.ConnectDB()
+//	db.AutoMigrate(&entity.Account{})
+//	db.AutoMigrate(&entity.Message{})
+//	db.AutoMigrate(&entity.Room{})
+//}
+//
+//
+//func setUpHandler() {
+//
+//
+//	service := registry.NewService(repository)
+//	accountHandler := handler.NewAccountHandler(repository, service)
+//	messageHandler := handler.NewMessageHandler(repository, service)
+//}
+//
+
+func setupRouter() *gin.Engine {
 	repository := registry.NewRepository()
 	db, _ := dao.ConnectDB()
 	db.AutoMigrate(&entity.Account{})
 	db.AutoMigrate(&entity.Message{})
 	db.AutoMigrate(&entity.Room{})
-
 	service := registry.NewService(repository)
 	accountHandler := handler.NewAccountHandler(repository, service)
 	messageHandler := handler.NewMessageHandler(repository, service)
-	//store, _ := redis.NewStore(10, "tcp", "redis:6379", "", []byte("secret"))
-	//store := cookie.NewStore([]byte("secret"))
-
 	router := gin.Default()
 	router.POST("/verify", func(context *gin.Context) {
-		if err := accountHandler.Verify(context);err==nil{
-			handler.OK(context,nil)
+		if err := accountHandler.Verify(context); err == nil {
+			utility.OK(context, nil)
 		}
 	})
 	router.POST("/signUp", func(context *gin.Context) {
@@ -39,14 +55,15 @@ func main() {
 	r.Use(func(context *gin.Context) {
 		accountHandler.Verify(context)
 	})
-	r.POST("/")
-	r.POST("/signOut")
+
 	r.POST("/createRoom", func(c *gin.Context) {
 		messageHandler.CreateRoom(c)
 	})
+
 	r.POST("/findMyRoom", func(c *gin.Context) {
 		messageHandler.FindMyRooms(c)
 	})
+
 	r.POST("/findPublicRoom", func(c *gin.Context) {
 		messageHandler.FindPublicRooms(c)
 	})
@@ -67,5 +84,11 @@ func main() {
 	chat.POST("/getMessage", func(context *gin.Context) {
 		messageHandler.GetMessage(context)
 	})
+
+	return router
+}
+
+func main() {
+	router := setupRouter()
 	router.Run(":8080")
 }

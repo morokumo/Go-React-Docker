@@ -3,3 +3,4 @@ FROM node:alpine
 WORKDIR /usr/src/app
 COPY ./frontend/package*.json ./
 COPY ./frontend .
+RUN npm install

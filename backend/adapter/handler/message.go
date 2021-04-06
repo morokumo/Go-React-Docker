@@ -4,6 +4,7 @@ import (
 	"backend/adapter/registry"
 	"backend/domain/entity"
 	"backend/usecase"
+	"backend/utility"
 	"bytes"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -28,26 +29,25 @@ type MessageHandler interface {
 type message struct {
 	uc usecase.Message
 }
-type jsonRoom struct {
-	Name    string `json:"room_name"`
-	Info    string `json:"info"`
-	Private string `json:"private"`
-}
+
 
 func (m message) Verify(ctx *gin.Context) {
 	bodyCopy := new(bytes.Buffer)
 	_, err := io.Copy(bodyCopy, ctx.Request.Body)
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 	}
 	bodyData := bodyCopy.Bytes()
 	ctx.Request.Body = ioutil.NopCloser(bytes.NewReader(bodyData))
+
 	sendContent, err := convertSendContent(ctx)
+
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 	}
+
 	if err := m.uc.Verify(sendContent); err != nil {
-		UnAuthorized(ctx)
+		utility.UnAuthorized(ctx)
 	}
 	ctx.Request.Body = ioutil.NopCloser(bytes.NewReader(bodyData))
 }
@@ -55,50 +55,50 @@ func (m message) Verify(ctx *gin.Context) {
 func (m message) FindMyRooms(ctx *gin.Context) {
 	account, err := readAccount(ctx)
 	if err != nil {
-		UnAuthorized(ctx)
+		utility.UnAuthorized(ctx)
 		return
 	}
 	rooms, err := m.uc.FindMyRooms(account)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
 	data := map[string]interface{}{
 		"rooms": rooms,
 	}
-	OK(ctx, data)
+	utility.OK(ctx, data)
 
 }
 func (m message) FindPublicRooms(ctx *gin.Context) {
 	account, err := readAccount(ctx)
 	if err != nil {
-		UnAuthorized(ctx)
+		utility.UnAuthorized(ctx)
 		return
 	}
 	rooms, err := m.uc.FindPublicRooms(account)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
 	data := map[string]interface{}{
 		"rooms": rooms,
 	}
-	OK(ctx, data)
+	utility.OK(ctx, data)
 
 }
 
 func (m message) CreateRoom(ctx *gin.Context) {
 	room, err := convertRoom(ctx)
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 		return
 	}
 	err = m.uc.CreateRoom(room)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
-	Created(ctx, "")
+	utility.Created(ctx, "")
 }
 
 func (m message) DeleteRoom(ctx *gin.Context) error {
@@ -109,15 +109,15 @@ func (m message) JoinRoom(ctx *gin.Context) {
 	sendContent, err := convertSendContent(ctx)
 	log.Println(sendContent)
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 		return
 	}
 	m.uc.JoinRoom(sendContent)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
-	OK(ctx, nil)
+	utility.OK(ctx, nil)
 }
 
 func (m message) LeaveRoom(ctx *gin.Context) error {
@@ -131,35 +131,35 @@ func (m message) UpdateRoom(ctx *gin.Context) error {
 func (m message) SendMessage(ctx *gin.Context) {
 	sendContent, err := convertSendContent(ctx)
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 		return
 	}
 	msg, err := m.uc.SendMessage(sendContent)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
 	data := map[string]interface{}{
 		"chat_message": msg,
 	}
-	OK(ctx, data)
+	utility.OK(ctx, data)
 }
 
 func (m message) GetMessage(ctx *gin.Context) {
 	sendContent, err := convertSendContent(ctx)
 	if err != nil {
-		BadRequest(ctx, err)
+		utility.BadRequest(ctx, err)
 		return
 	}
 	messages, err := m.uc.GetMessageByRoom(sendContent)
 	if err != nil {
-		InternalServerError(ctx)
+		utility.InternalServerError(ctx)
 		return
 	}
 	data := map[string]interface{}{
 		"chat_messages": messages,
 	}
-	OK(ctx, data)
+	utility.OK(ctx, data)
 }
 
 func readAccount(ctx *gin.Context) (*entity.Account, error) {
@@ -171,28 +171,28 @@ func readAccount(ctx *gin.Context) (*entity.Account, error) {
 	return account, nil
 }
 
-func convertSendContent(ctx *gin.Context) (*usecase.SendContent, error) {
+func convertSendContent(ctx *gin.Context) (*usecase.RequestMessage, error) {
 	account, err := readAccount(ctx)
 	if err != nil {
 		panic(err)
 	}
-	var json usecase.SendContent
+	var json usecase.RequestMessage
 	err = ctx.ShouldBindJSON(&json)
 	if err != nil {
 		return nil, err
 	}
 	json.Account = account
-	json.RoomId = EscapeString(json.RoomId)
-	json.MessageText = EscapeString(json.MessageText)
+	json.RoomId = utility.EscapeString(json.RoomId)
+	json.MessageText = utility.EscapeString(json.MessageText)
 
 	return &json, err
 }
 func convertRoom(ctx *gin.Context) (*entity.Room, error) {
 	account, err := readAccount(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	var json jsonRoom
+	var json usecase.RequestRoom
 	err = ctx.ShouldBindJSON(&json)
 	if err != nil {
 		return nil, err
@@ -209,8 +209,8 @@ func convertRoom(ctx *gin.Context) (*entity.Room, error) {
 
 	return &entity.Room{
 			ID:       uuid2.NewString(),
-			Name:     EscapeString(json.Name),
-			Info:     EscapeString(json.Info),
+			Name:     utility.EscapeString(json.Name),
+			Info:     utility.EscapeString(json.Info),
 			Accounts: accounts,
 			Private:  private},
 		err

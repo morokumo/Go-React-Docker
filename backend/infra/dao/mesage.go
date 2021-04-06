@@ -19,7 +19,6 @@ func (m MessageRepository) FindAll() (*[]entity.Message, error) {
 }
 
 func (m MessageRepository) FindById(id string) (*entity.Message, error) {
-
 	panic("implement me")
 }
 

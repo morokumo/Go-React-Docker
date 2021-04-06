@@ -5,23 +5,23 @@ import (
 	"backend/domain/repository"
 	"backend/domain/service"
 	"errors"
-	"log"
-	"time"
 )
 
 type Message interface {
-	Verify(sendContent *SendContent) error
+	// アカウントとルームが紐づけられているかの検証
+	Verify(sendContent *RequestMessage) error
 	FindMyRooms(account *entity.Account) (*[]responseRoom, error)
 	FindPublicRooms(account *entity.Account) (*[]responseRoom, error)
 	CreateRoom(room *entity.Room) error
-	DeleteRoom(sendContent *SendContent) error
-	JoinRoom(sendContent *SendContent) error
-	LeaveRoom(sendContent *SendContent) error
-	UpdateRoom(sendContent *SendContent) error
-	SendMessage(sendContent *SendContent) (*responseMessage,error)
-	GetMessageByRoom(sendContent *SendContent) (*[]responseMessage, error)
+	DeleteRoom(sendContent *RequestMessage) error
+	JoinRoom(sendContent *RequestMessage) error
+	LeaveRoom(sendContent *RequestMessage) error
+	UpdateRoom(sendContent *RequestMessage) error
+	SendMessage(sendContent *RequestMessage) (*responseMessage, error)
+	GetMessageByRoom(sendContent *RequestMessage) (*[]responseMessage, error)
 	GetMessageByAccount(account *entity.Account) error
 }
+
 type message struct {
 	messageRepository repository.MessageRepository
 	roomRepository    repository.RoomRepository
@@ -31,31 +31,12 @@ type message struct {
 func (m message) FindPublicRooms(account *entity.Account) (*[]responseRoom, error) {
 	rooms, err := m.roomRepository.FindPublic(account)
 	if err != nil {
-
+		return nil, err
 	}
 	return convertResponseRoom(rooms), err
 }
 
-type responseRoom struct {
-	ID      string
-	Name    string
-	Info    string
-	Private bool
-	CreateTime  time.Time
-}
-type responseMessage struct {
-	AccountID string
-	Text      string
-	SendTime  time.Time
-}
-
-type SendContent struct {
-	RoomId      string `json:"room_id"`
-	MessageText string `json:"message"`
-	Account     *entity.Account
-}
-
-func (m message) Verify(sendContent *SendContent) error {
+func (m message) Verify(sendContent *RequestMessage) error {
 
 	cnt, err := m.roomRepository.CountByAccountAndRoom(&entity.Account{ID: sendContent.Account.ID}, &entity.Room{ID: sendContent.RoomId})
 	if err != nil {
@@ -67,23 +48,23 @@ func (m message) Verify(sendContent *SendContent) error {
 	return nil
 }
 
-func (m message) DeleteRoom(sendContent *SendContent) error {
+func (m message) DeleteRoom(sendContent *RequestMessage) error {
 	panic("implement me")
 }
 
-func (m message) JoinRoom(sendContent *SendContent) error {
-	return m.roomRepository.AddAccount(&entity.Room{ID: sendContent.RoomId},sendContent.Account)
+func (m message) JoinRoom(sendContent *RequestMessage) error {
+	return m.roomRepository.AddAccount(&entity.Room{ID: sendContent.RoomId}, sendContent.Account)
 }
 
-func (m message) LeaveRoom(sendContent *SendContent) error {
+func (m message) LeaveRoom(sendContent *RequestMessage) error {
 	panic("implement me")
 }
 
-func (m message) UpdateRoom(sendContent *SendContent) error {
+func (m message) UpdateRoom(sendContent *RequestMessage) error {
 	panic("implement me")
 }
 
-func (m message) GetMessageByRoom(sendContent *SendContent) (*[]responseMessage, error) {
+func (m message) GetMessageByRoom(sendContent *RequestMessage) (*[]responseMessage, error) {
 	messages, err := m.messageRepository.FindByRoom(&entity.Room{ID: sendContent.RoomId})
 	var res []responseMessage
 	for _, msg := range *messages {
@@ -97,37 +78,45 @@ func (m message) GetMessageByAccount(account *entity.Account) error {
 }
 
 func (m message) FindMyRooms(account *entity.Account) (*[]responseRoom, error) {
-	log.Println("AAAAA",account)
 	rooms, err := m.roomRepository.FindByAccount(account)
 	if err != nil {
-
+		return nil, err
 	}
 	return convertResponseRoom(rooms), err
 }
 
 func (m message) CreateRoom(room *entity.Room) error {
-	m.roomRepository.Create(room)
+	_, err := m.roomRepository.Create(room)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (m message) SendMessage(sendContent *SendContent) (*responseMessage,error) {
+func (m message) SendMessage(sendContent *RequestMessage) (*responseMessage, error) {
 	room, err := m.roomRepository.FindById(sendContent.RoomId)
-	_, err = m.roomRepository.CountById(sendContent.RoomId)
-	if !(room.ID == sendContent.RoomId && err == nil) {
-		return nil,errors.New("room not found")
-	}
-	msg, err := m.messageRepository.Create(&entity.Message{Text: sendContent.MessageText, AccountID: sendContent.Account.ID})
-	err = m.roomRepository.AddMessage(room, msg)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	return &responseMessage{AccountID: sendContent.Account.ID,Text: msg.Text,SendTime: msg.CreatedAt},nil
+
+	msg, err := m.messageRepository.Create(&entity.Message{Text: sendContent.MessageText, AccountID: sendContent.Account.ID})
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.roomRepository.AddMessage(room, msg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &responseMessage{AccountID: sendContent.Account.ID, Text: msg.Text, SendTime: msg.CreatedAt}, nil
 }
 
 func convertResponseRoom(rooms *[]entity.Room) *[]responseRoom {
 	var res []responseRoom
 	for _, room := range *rooms {
-		res = append(res, responseRoom{ID: room.ID, Name: room.Name, Info: room.Info, Private: room.Private,CreateTime: room.CreatedAt})
+		res = append(res, responseRoom{ID: room.ID, Name: room.Name, Info: room.Info, Private: room.Private, CreateTime: room.CreatedAt})
 	}
 	return &res
 }

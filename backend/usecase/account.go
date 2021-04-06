@@ -6,7 +6,6 @@ import (
 	"backend/domain/service"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 )
 
 type Account interface {
@@ -23,11 +22,7 @@ type account struct {
 	service    service.AccountService
 	auth       service.AuthService
 }
-type AuthAccount struct {
-	ID       string `json:"account_id"`
-	Password string `json:"password"`
-	Token    string
-}
+
 
 func (a account) Verify(authAccount *AuthAccount) (*entity.Account, error) {
 	accountId, err := a.auth.Verification(authAccount.Token)
@@ -35,7 +30,6 @@ func (a account) Verify(authAccount *AuthAccount) (*entity.Account, error) {
 		return nil, err
 	}
 	ac, err := a.repository.FindById(accountId)
-	log.Println(accountId,ac,err)
 	if err != nil {
 		return nil, err
 	}
@@ -43,19 +37,22 @@ func (a account) Verify(authAccount *AuthAccount) (*entity.Account, error) {
 }
 
 func (a account) SignUp(e AuthAccount) error {
-	password := []byte(e.Password)
-	hashedPassword, _ := bcrypt.GenerateFromPassword(password, 10)
-	e.Password = string(hashedPassword)
 	ac, err := a.repository.CountById(e.ID)
 	if ac > 0 {
 		return errors.New("already exist")
 	}
+
+	password := []byte(e.Password)
+	hashedPassword, _ := bcrypt.GenerateFromPassword(password, 10)
+	e.Password = string(hashedPassword)
+
 	_, err = a.repository.Create(&entity.Account{ID: e.ID, Password: e.Password})
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
 func (a account) SignIn(e *AuthAccount) (string, error) {
 	token, err := a.auth.Authorize(&entity.Account{ID: e.ID, Password: e.Password})
 	if err != nil {

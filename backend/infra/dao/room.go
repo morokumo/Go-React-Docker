@@ -4,7 +4,6 @@ import (
 	"backend/domain/entity"
 	"backend/domain/repository"
 	"gorm.io/gorm"
-	"log"
 )
 
 type RoomRepository struct {
@@ -13,9 +12,8 @@ type RoomRepository struct {
 
 func (r RoomRepository) FindPublic(account *entity.Account) (*[]entity.Room, error) {
 	var rooms []entity.Room
-	s := r.db.Debug().Table("room_accounts").Where("account_id = ?", account.ID).Select("room_id")
-	r.db.Debug().Table("rooms").Where("id not in (?)", s).Where("private = ?", false).Find(&rooms)
-
+	s := r.db.Table("room_accounts").Where("account_id = ?", account.ID).Select("room_id")
+	r.db.Table("rooms").Where("id not in (?)", s).Where("private = ?", false).Find(&rooms)
 	return &rooms, nil
 }
 
@@ -27,7 +25,6 @@ func (r RoomRepository) CountByAccountAndRoom(account *entity.Account, room *ent
 func (r RoomRepository) CountById(id string) (int64, error) {
 	var cnt int64
 	r.db.Model(&entity.Room{}).Where("id = ?", id).Count(&cnt)
-
 	return cnt, nil
 }
 
@@ -37,12 +34,7 @@ func (r RoomRepository) AddMessage(room *entity.Room, message *entity.Message) e
 }
 
 func (r RoomRepository) AddAccount(room *entity.Room, account *entity.Account) error {
-	log.Println("\n", room, "\n", account)
-	err := r.db.Debug().Model(room).Association("Accounts").Append(account)
-	log.Println(err)
-	log.Println(room)
-	log.Println(account)
-
+	err := r.db.Model(room).Association("Accounts").Append(account)
 	return err
 }
 
@@ -57,8 +49,7 @@ func (r RoomRepository) FindById(id string) (*entity.Room, error) {
 }
 
 func (r RoomRepository) FindByAccount(account *entity.Account) (*[]entity.Room, error) {
-	r.db.Debug().Preload("Rooms").Where("id = ?", account.ID).Find(&account)
-	log.Println(account.Rooms)
+	r.db.Preload("Rooms").Where("id = ?", account.ID).Find(&account)
 	return &account.Rooms, nil
 }
 

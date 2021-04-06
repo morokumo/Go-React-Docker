@@ -9,7 +9,6 @@ type RoomRepository interface {
 	FindPublic(account *entity.Account) (*[]entity.Room, error)
 	FindById(id string) (*entity.Room, error)
 	FindByAccount(account *entity.Account) (*[]entity.Room, error)
-
 	FindByMessage(message *entity.Message) (*entity.Room, error)
 	AddMessage(room *entity.Room, message *entity.Message) error
 	AddAccount(room *entity.Room, account *entity.Account) error
