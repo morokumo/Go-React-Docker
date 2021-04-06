@@ -59,7 +59,7 @@ func (a accountHandler) Verify(ctx *gin.Context) error {
 
 func (a accountHandler) SignUp(ctx *gin.Context) {
 	account, err := convertAccount(ctx)
-
+	log.Println(account)
 	if err != nil {
 		utility.BadRequest(ctx, err)
 		return
@@ -70,8 +70,9 @@ func (a accountHandler) SignUp(ctx *gin.Context) {
 	}
 
 	err = a.uc.SignUp(*account)
+	log.Println(err)
 	if err != nil {
-
+		utility.BadRequest(ctx, err)
 		return
 	}
 	token, err := a.uc.SignIn(account)

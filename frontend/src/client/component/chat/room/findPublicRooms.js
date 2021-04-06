@@ -16,20 +16,20 @@ export function FindPublicRooms(props) {
             .then(res => {
                 console.log(res.data)
                 if (!(res.data.rooms === null) && !(res.data.rooms === undefined)) {
-
                     setRooms(res.data.rooms)
                 }
             })
 
     }
 
-    function joinRoom(event) {
+    async function joinRoom(event) {
         let result = confirm("join this room ?")
         if (result) {
             let data = {"room_id": event.target.value}
-            console.log("DATA:",event)
-            axios.post(`/api/joinRoom`, data)
+            console.log("DATA:", event)
+            await axios.post(`/api/joinRoom`, data)
                 .then(res => {
+
                 })
         }
 
@@ -37,7 +37,7 @@ export function FindPublicRooms(props) {
     }
 
     const Row = ({index, style}) => (
-        <ListItem>
+        <ListItem style={style}>
             <ListItemText
                 primary={rooms[index].Name.length > 10 ? rooms[index].Name.substr(0, 10) + '...' : rooms[index].Name}/>
             <button color="secondary" value={rooms[index].ID} onClick={joinRoom}>JOIN</button>

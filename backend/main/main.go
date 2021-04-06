@@ -67,6 +67,9 @@ func setupRouter() *gin.Engine {
 	r.POST("/findPublicRoom", func(c *gin.Context) {
 		messageHandler.FindPublicRooms(c)
 	})
+	r.POST("/findRoomAccounts", func(c *gin.Context) {
+		messageHandler.FindRoomAccount(c)
+	})
 
 	r.POST("/joinRoom", func(c *gin.Context) {
 		messageHandler.JoinRoom(c)

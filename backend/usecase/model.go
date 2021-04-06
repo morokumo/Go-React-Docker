@@ -32,8 +32,26 @@ type responseRoom struct {
 	CreateTime time.Time
 }
 
+func convertResponseRoom(rooms *[]entity.Room) *[]responseRoom {
+	var res []responseRoom
+	for _, room := range *rooms {
+		res = append(res, responseRoom{ID: room.ID, Name: room.Name, Info: room.Info, Private: room.Private, CreateTime: room.CreatedAt})
+	}
+	return &res
+}
+
 type responseMessage struct {
 	AccountID string
 	Text      string
 	SendTime  time.Time
+}
+type responseAccount struct {
+	ID string
+}
+func convertResponseAccount(accounts *[]entity.Account) *[]responseAccount {
+	var res []responseAccount
+	for _, account := range *accounts {
+		res = append(res, responseAccount{ID: account.ID})
+	}
+	return &res
 }

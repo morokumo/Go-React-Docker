@@ -24,7 +24,7 @@ export function SignOut(props) {
     return (
         <div>
             {redirect ? <Redirect to={'/'}/> : ''}
-            <Button onClick={signOut}>Sign out</Button>
+            <Button color="primary"  variant="contained" onClick={signOut}>Sign out</Button>
         </div>
 
     );

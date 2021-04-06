@@ -149,7 +149,6 @@ app.post('/api/joinRoom', (req, res) => {
     let token = req.session.JWT === undefined ? "" : req.session.JWT;
     let config = {headers: {Authorization: token}}
     let data = {"room_id": req.body.room_id}
-    console.log(data)
     axios.post('/api/joinRoom', data, config)
         .then(function (response) {
             res.send(response.data);
@@ -190,6 +189,20 @@ app.post('/api/getMessage', (req, res) => {
 
 });
 
+app.post('/api/getRoomAccounts', (req, res) => {
+    let token = req.session.JWT === undefined ? "" : req.session.JWT;
+    let config = {headers: {Authorization: token}}
+    let data = {"room_id": req.body.room_id}
+    axios.post('/api/findRoomAccounts', data, config)
+        .then(function (response) {
+            console.log(response.data)
+            res.send(response.data);
+        })
+        .catch(function (error) {
+            res.status(401).send();
+        });
+});
+
 
 app.get('/*', function (req, res) {
     res.sendFile(path.resolve('./', 'dist', 'index.html'))
@@ -202,32 +215,7 @@ io.on('connection', function (socket) {
         console.log(socket.id + ' is disconnected.');
     })
 
-    socket.on("send", (e) => {
-        let sid = cookie.parse(socket.handshake.headers.cookie)['connect.sid'];
-        let sessionID = sid.split(".")[0].split(":")[1];
-        redisStore.get(sessionID, (err, session) => {
-            if (err === null) {
-                let token = session.JWT
-                let config = {headers: {Authorization: token}}
-                let data = {"room_id": e['room'], "message": e['message']}
-                axios.post('/api/chat/sendMessage', data, config)
-                    .then(function (response) {
-                        socket.to(e["room"]).emit("get", response.data.chat_message)
-                    })
-                    .catch(function (error) {
-                        socket.on("send", (e) => {
-                            socket.to(e["room"]).emit("get", {"error": 'send failed.'})
-                        })
-                    });
-            } else {
-                socket.to(e["room"]).emit("get", {"error": 'send failed.'})
-            }
-
-        })
-
-
-    })
-
+    // socket.emit()
 
     socket.on("join", (room_id) => {
         socket.rooms.forEach(v => {
@@ -235,7 +223,31 @@ io.on('connection', function (socket) {
         })
         socket.join(room_id)
     })
-});
+
+
+    socket.on("send", (e) => {
+        let sid = cookie.parse(socket.handshake.headers.cookie)['connect.sid'];
+        let sessionID = sid.split(".")[0].split(":")[1];
+        redisStore.get(sessionID, (err, session) => {
+            if (err == null) {
+                let token = session.JWT
+                let config = {headers: {Authorization: token}}
+                let data = {"room_id": e['room'], "message": e['message']}
+                axios.post('/api/chat/sendMessage', data, config)
+                    .then(function (response) {
+                        console.log("AC")
+                        socket.to(e["room"]).emit("get", response.data.chat_message)
+                    })
+                    .catch(function (error) {
+                        socket.on("send", (e) => {
+                            console.log("WA")
+                            socket.to(e["room"]).emit("get", {"error": 'send failed.'})
+                        })
+                    });
+            }
+        })
+    })
+})
 
 
 app.use('/api', api)

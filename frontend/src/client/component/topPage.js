@@ -2,20 +2,21 @@ import React, {useEffect, useState} from "react";
 import {SignForm} from "./signForm";
 import {Chat} from "./chat/chat";
 import axios from "axios";
-import {Redirect} from "react-router-dom";
+import {CircularProgress} from "@material-ui/core";
 
 export function TopPage(props) {
-    const [auth, setAuth] = useState(true)
+    const [auth, setAuth] = useState(false)
+    const [load, setLoad] = useState(true)
 
     useEffect(() => {
         verify().then((ok) => {
             setAuth(ok)
-        }).catch((ok) => {
+            setLoad(false)
+        }).catch((err) => {
             setAuth(false)
+            setLoad(false)
         })
-        console.log(props)
     }, [props])
-
 
     async function verify() {
         let ok = false
@@ -30,7 +31,7 @@ export function TopPage(props) {
 
     return (
         <div>
-            {auth ? <Chat/> :  <SignForm/>}
+            {load ? <CircularProgress color="secondary"/> : (auth ? <Chat/> : <SignForm/>)}
         </div>
 
     );

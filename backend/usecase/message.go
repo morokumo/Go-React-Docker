@@ -9,16 +9,18 @@ import (
 
 type Message interface {
 	// アカウントとルームが紐づけられているかの検証
-	Verify(sendContent *RequestMessage) error
+	Verify(requestMessage *RequestMessage) error
 	FindMyRooms(account *entity.Account) (*[]responseRoom, error)
 	FindPublicRooms(account *entity.Account) (*[]responseRoom, error)
+	FindRoomAccounts(requestMessage *RequestMessage) (*[]responseAccount, error)
+
 	CreateRoom(room *entity.Room) error
-	DeleteRoom(sendContent *RequestMessage) error
-	JoinRoom(sendContent *RequestMessage) error
-	LeaveRoom(sendContent *RequestMessage) error
-	UpdateRoom(sendContent *RequestMessage) error
-	SendMessage(sendContent *RequestMessage) (*responseMessage, error)
-	GetMessageByRoom(sendContent *RequestMessage) (*[]responseMessage, error)
+	DeleteRoom(requestMessage *RequestMessage) error
+	JoinRoom(requestMessage *RequestMessage) error
+	LeaveRoom(requestMessage *RequestMessage) error
+	UpdateRoom(requestMessage *RequestMessage) error
+	SendMessage(requestMessage *RequestMessage) (*responseMessage, error)
+	GetMessageByRoom(requestMessage *RequestMessage) (*[]responseMessage, error)
 	GetMessageByAccount(account *entity.Account) error
 }
 
@@ -26,14 +28,6 @@ type message struct {
 	messageRepository repository.MessageRepository
 	roomRepository    repository.RoomRepository
 	messageService    service.MessageService
-}
-
-func (m message) FindPublicRooms(account *entity.Account) (*[]responseRoom, error) {
-	rooms, err := m.roomRepository.FindPublic(account)
-	if err != nil {
-		return nil, err
-	}
-	return convertResponseRoom(rooms), err
 }
 
 func (m message) Verify(sendContent *RequestMessage) error {
@@ -46,6 +40,28 @@ func (m message) Verify(sendContent *RequestMessage) error {
 		return errors.New("This room ID is not associated with an account.")
 	}
 	return nil
+}
+func (m message) FindMyRooms(account *entity.Account) (*[]responseRoom, error) {
+	rooms, err := m.roomRepository.FindByAccount(account)
+	if err != nil {
+		return nil, err
+	}
+	return convertResponseRoom(rooms), err
+}
+func (m message) FindPublicRooms(account *entity.Account) (*[]responseRoom, error) {
+	rooms, err := m.roomRepository.FindPublic(account)
+	if err != nil {
+		return nil, err
+	}
+	return convertResponseRoom(rooms), err
+}
+
+func (m message) FindRoomAccounts(requestMessage *RequestMessage) (*[]responseAccount, error) {
+	accounts, err := m.roomRepository.FindRoomAccounts(requestMessage.RoomId)
+	if err != nil {
+		return nil, err
+	}
+	return convertResponseAccount(accounts), err
 }
 
 func (m message) DeleteRoom(sendContent *RequestMessage) error {
@@ -77,13 +93,7 @@ func (m message) GetMessageByAccount(account *entity.Account) error {
 	panic("implement me")
 }
 
-func (m message) FindMyRooms(account *entity.Account) (*[]responseRoom, error) {
-	rooms, err := m.roomRepository.FindByAccount(account)
-	if err != nil {
-		return nil, err
-	}
-	return convertResponseRoom(rooms), err
-}
+
 
 func (m message) CreateRoom(room *entity.Room) error {
 	_, err := m.roomRepository.Create(room)
@@ -113,13 +123,6 @@ func (m message) SendMessage(sendContent *RequestMessage) (*responseMessage, err
 	return &responseMessage{AccountID: sendContent.Account.ID, Text: msg.Text, SendTime: msg.CreatedAt}, nil
 }
 
-func convertResponseRoom(rooms *[]entity.Room) *[]responseRoom {
-	var res []responseRoom
-	for _, room := range *rooms {
-		res = append(res, responseRoom{ID: room.ID, Name: room.Name, Info: room.Info, Private: room.Private, CreateTime: room.CreatedAt})
-	}
-	return &res
-}
 
 func NewMessage(messageRepository repository.MessageRepository, roomRepository repository.RoomRepository, service service.MessageService) Message {
 	return &message{messageRepository: messageRepository, roomRepository: roomRepository, messageService: service}

@@ -8,11 +8,12 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
+import {Alert, AlertTitle} from "@material-ui/lab";
 
 const useStyles = makeStyles((theme) => ({
     root: {
         width: 300,
-        height: 350,
+        height: 450,
         margin: "0 auto"
     },
     bullet: {
@@ -43,10 +44,12 @@ export function SignForm(props) {
     const [accountID, setAccountID] = useState('')
     const [password, setPassword] = useState('')
     const [auth, setAuth] = useState(false)
+    const [error, setError] = useState('')
     const classes = useStyles();
 
+
     useEffect(() => {
-    })
+    }, [])
 
     function getData() {
         return {'account_id': accountID, 'password': password}
@@ -55,13 +58,15 @@ export function SignForm(props) {
     function onSubmitSignUP() {
         let data = getData()
         if (data['account_id'] === '' || data['password'] === '') {
-            alert("please input")
+            setError("please input account ID and password")
         } else {
             axios.post('api/signUp', data)
                 .then(() => {
                     setAuth(true)
+                    setAuth(false)
+                    setAuth(true)
                 }).catch(() => {
-                alert("already exist.")
+                setError("this account ID is already exist.")
             })
         }
 
@@ -69,15 +74,16 @@ export function SignForm(props) {
 
     function onSubmitSignIN() {
         let data = getData()
-        console.log('AUTH')
         if (data['account_id'] === '' || data['password'] === '') {
-            alert("please input")
+            setError("please input account ID and password")
         } else {
             axios.post('api/signIn', data)
                 .then(() => {
                     setAuth(true)
+                    setAuth(false)
+                    setAuth(true)
                 }).catch(() => {
-                alert("account incorrect")
+                setError("accountID or password is incorrect")
             })
         }
     }
@@ -87,16 +93,27 @@ export function SignForm(props) {
             {auth ? <Redirect to={'/'}/> : ''}
             <Card className={classes.root}>
                 <CardContent>
+                    {
+                        error.length > 0 ?
+                            <Alert severity="error">
+                                <AlertTitle>Error</AlertTitle>
+                                <strong>{error}</strong>
+                            </Alert>
+                            :
+                            ""
+                    }
                     <Typography className={classes.title} color="textSecondary" gutterBottom>
                         Sign Form
                     </Typography>
-                    <TextField className={classes.text} required id="standard-required" label="Account ID"
-                               name="account_id" variant="filled"
+                    <TextField error={error.length > 0 && accountID.length < 1} className={classes.text} required
+                               id="standard-required" label="Account ID"
+                               name="account_id" variant="filled" value={accountID}
                                onChange={(event) => setAccountID(event.target.value)}/>
 
                     <br/>
-                    <TextField className={classes.text} required id="standard-required" label="Password"
-                               name="account_id" variant="filled"
+                    <TextField error={error.length > 0 && password.length < 1} className={classes.text} required
+                               id="standard-required" label="Password"
+                               name="account_id" variant="filled" value={password}
                                onChange={(event) => setPassword(event.target.value)}/>
                 </CardContent>
                 <CardActions>

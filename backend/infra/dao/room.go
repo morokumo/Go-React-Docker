@@ -10,11 +10,21 @@ type RoomRepository struct {
 	db gorm.DB
 }
 
+
 func (r RoomRepository) FindPublic(account *entity.Account) (*[]entity.Room, error) {
 	var rooms []entity.Room
 	s := r.db.Table("room_accounts").Where("account_id = ?", account.ID).Select("room_id")
 	r.db.Table("rooms").Where("id not in (?)", s).Where("private = ?", false).Find(&rooms)
 	return &rooms, nil
+}
+
+func (r RoomRepository) FindRoomAccounts(id string) (*[]entity.Account, error) {
+	var accounts []entity.Account
+	s := r.db.Table("room_accounts").Where("room_id = ?", id).Select("account_id")
+	r.db.Debug().Table("accounts").Where("id in (?)", s).Find(&accounts)
+
+	//r.db.Preload("accounts").Where("id = ?", id).Find(&accounts)
+	return &accounts, nil
 }
 
 func (r RoomRepository) CountByAccountAndRoom(account *entity.Account, room *entity.Room) (int64, error) {

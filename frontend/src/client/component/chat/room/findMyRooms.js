@@ -2,7 +2,6 @@ import React, {useEffect, useState} from "react";
 import axios from "axios";
 import {ListItem, ListItemIcon, ListItemText, makeStyles} from "@material-ui/core";
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
-import {Link} from "react-router-dom";
 import {FixedSizeList} from 'react-window';
 import {VisibilityOffOutlined} from "@material-ui/icons";
 
@@ -35,11 +34,11 @@ export function FindMyRooms(props) {
 
     const Row = ({index, style}) => (
 
-        <ListItem button
-            onClick={()=>props.p.setRoom(rooms[index])}
-        >
+        <ListItem style={style} button onClick={() => props.p.setRoom(rooms[index])}>
             <ListItemText
-                primary={rooms[index].Name.length > 10 ? rooms[index].Name.substr(0, 10) + '...' : rooms[index].Name}/>
+                primary={
+                    rooms[index].Name.length > 10 ?
+                        rooms[index].Name.substr(0, 10) + '...' : rooms[index].Name}/>
             {rooms[index].Private ? <ListItemIcon><VisibilityOffOutlined/></ListItemIcon> : ''}
             <ListItemIcon>
                 <KeyboardArrowRightIcon/>

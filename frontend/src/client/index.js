@@ -34,7 +34,6 @@ ReactDOM.render(
         <Router history={history}>
                 <Switch>
                     <Route component={TopPage}/>
-                    <Route component={TopPage}/>
                 </Switch>
         </Router>
 

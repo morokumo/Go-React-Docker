@@ -122,7 +122,7 @@ export function CreateRoomForm() {
 
             </CardContent>
             <CardActions>
-                <Button className={classes.button} variant="contained" color="primary" onClick={handleSubmit}>
+                <Button className={classes.button} variant="contained" color="secondary" onClick={handleSubmit}>
                     Create Room
                 </Button>
             </CardActions>
