@@ -74,7 +74,7 @@ export function AccountList(props) {
             <Card className={classes.root}>
                 <CardContent>
                     <h2>account list</h2>
-                    <FixedSizeList height={400} width={600} itemSize={60} itemCount={accounts.length}>
+                    <FixedSizeList height={600} width={300} itemSize={60} itemCount={accounts.length}>
                         {Row}
                     </FixedSizeList>
                 </CardContent>

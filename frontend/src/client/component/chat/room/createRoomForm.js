@@ -61,12 +61,10 @@ export function CreateRoomForm() {
             .then(res => {
                 setSuccess("Created.")
                 setError("")
-                console.log("process")
             }).catch(error => {
                 setSuccess("")
                 setError("Unauthorized!")
             })
-        console.log("Done")
         setRoomName('')
         setInfo('')
         setPassword('')

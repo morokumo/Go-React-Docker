@@ -14,7 +14,6 @@ export function FindPublicRooms(props) {
     function findRooms() {
         axios.post(`/api/findPublicRooms`)
             .then(res => {
-                console.log(res.data)
                 if (!(res.data.rooms === null) && !(res.data.rooms === undefined)) {
                     setRooms(res.data.rooms)
                 }
@@ -26,7 +25,6 @@ export function FindPublicRooms(props) {
         let result = confirm("join this room ?")
         if (result) {
             let data = {"room_id": event.target.value}
-            console.log("DATA:", event)
             await axios.post(`/api/joinRoom`, data)
                 .then(res => {
 

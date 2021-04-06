@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
-	"log"
 )
 
 type AccountHandler interface {
@@ -59,7 +58,6 @@ func (a accountHandler) Verify(ctx *gin.Context) error {
 
 func (a accountHandler) SignUp(ctx *gin.Context) {
 	account, err := convertAccount(ctx)
-	log.Println(account)
 	if err != nil {
 		utility.BadRequest(ctx, err)
 		return
@@ -70,7 +68,6 @@ func (a accountHandler) SignUp(ctx *gin.Context) {
 	}
 
 	err = a.uc.SignUp(*account)
-	log.Println(err)
 	if err != nil {
 		utility.BadRequest(ctx, err)
 		return
@@ -88,13 +85,11 @@ func (a accountHandler) SignIn(ctx *gin.Context) {
 	account, err := convertAccount(ctx)
 	if err != nil {
 		utility.BadRequest(ctx, err)
-		log.Println(err)
 		return
 	}
 	token, err := a.uc.SignIn(account)
 	if err != nil {
 		utility.UnAuthorized(ctx)
-		log.Println(err)
 		return
 	}
 	data := map[string]interface{}{

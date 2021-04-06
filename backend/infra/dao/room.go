@@ -21,7 +21,7 @@ func (r RoomRepository) FindPublic(account *entity.Account) (*[]entity.Room, err
 func (r RoomRepository) FindRoomAccounts(id string) (*[]entity.Account, error) {
 	var accounts []entity.Account
 	s := r.db.Table("room_accounts").Where("room_id = ?", id).Select("account_id")
-	r.db.Debug().Table("accounts").Where("id in (?)", s).Find(&accounts)
+	r.db.Table("accounts").Where("id in (?)", s).Find(&accounts)
 
 	//r.db.Preload("accounts").Where("id = ?", id).Find(&accounts)
 	return &accounts, nil

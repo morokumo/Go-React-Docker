@@ -11,7 +11,6 @@ export default function Auth(props) {
         }).catch((ok) => {
             setAuth(false)
         })
-        console.log(props)
     }, [props])
 
     async function verify() {

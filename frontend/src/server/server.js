@@ -135,7 +135,6 @@ app.post('/api/findPublicRooms', (req, res) => {
     let config = {headers: {Authorization: token}}
     axios.post('/api/findPublicRoom', {}, config)
         .then(function (response) {
-            // console.log(response.data)
             res.send(response.data);
         })
         .catch(function (error) {
@@ -195,7 +194,6 @@ app.post('/api/getRoomAccounts', (req, res) => {
     let data = {"room_id": req.body.room_id}
     axios.post('/api/findRoomAccounts', data, config)
         .then(function (response) {
-            console.log(response.data)
             res.send(response.data);
         })
         .catch(function (error) {
@@ -235,12 +233,10 @@ io.on('connection', function (socket) {
                 let data = {"room_id": e['room'], "message": e['message']}
                 axios.post('/api/chat/sendMessage', data, config)
                     .then(function (response) {
-                        console.log("AC")
                         socket.to(e["room"]).emit("get", response.data.chat_message)
                     })
                     .catch(function (error) {
                         socket.on("send", (e) => {
-                            console.log("WA")
                             socket.to(e["room"]).emit("get", {"error": 'send failed.'})
                         })
                     });

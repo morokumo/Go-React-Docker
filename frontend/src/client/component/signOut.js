@@ -13,7 +13,6 @@ export function SignOut(props) {
         if (result) {
             axios.post('api/signOut')
                 .then((res) => {
-                    console.log(res)
                     setRedirect(true)
                 }).catch(() => {
                 alert("Failed.")

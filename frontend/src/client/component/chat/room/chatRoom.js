@@ -59,9 +59,6 @@ export function ChatRoom(props) {
             } else {
                 setError(e['error'])
             }
-            console.log(messages, e)
-
-            console.log("SEND")
         }, [])
     }, [])
 
@@ -69,7 +66,6 @@ export function ChatRoom(props) {
         getMessage()
         setMessage('')
         props.socket.emit("join", room.ID)
-        console.log("JOIN", props.socket.id)
     }, [room]);
 
     useEffect(() => {
@@ -86,8 +82,6 @@ export function ChatRoom(props) {
 
     async function handleSubmit() {
         if (message.length > 0) {
-            // await sendMessage()
-            // await getMessage()
             props.socket.emit("send", {room: room.ID, id: props.socket.id, message: message})
             list.scrollToItem(messages.length, 'end')
         }
@@ -97,7 +91,6 @@ export function ChatRoom(props) {
     async function getMessage() {
         await axios.post('/api/getMessage', {'room_id': room.ID, 'message': message})
             .then(res => {
-                console.log(res.data)
                 if (!(res.data === null) && !(res.data === undefined)) {
                     setMessages(res.data)
                 }
